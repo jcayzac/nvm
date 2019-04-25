@@ -20,8 +20,12 @@ nvm_stdout_is_terminal() {
   [ -t 1 ]
 }
 
+nvm_printf() {
+  command printf ${1+"$@"} 2>/dev/null || true
+}
+
 nvm_echo() {
-  command printf %s\\n "$*" 2>/dev/null
+  nvm_printf %s\\n "$*"
 }
 
 nvm_cd() {
@@ -143,7 +147,7 @@ nvm_is_version_installed() {
 
 nvm_print_npm_version() {
   if nvm_has "npm"; then
-    command printf " (npm v$(npm --version 2>/dev/null))"
+    nvm_printf " (npm v$(npm --version 2>/dev/null))"
   fi
 }
 
@@ -322,7 +326,7 @@ nvm_rc_version() {
     nvm_err "No .nvmrc file found"
     return 1
   fi
-  NVM_RC_VERSION="$(command head -n 1 "${NVMRC_PATH}" | command tr -d '\r')" || command printf ''
+  NVM_RC_VERSION="$(command head -n 1 "${NVMRC_PATH}" | command tr -d '\r')" || nvm_printf ''
   if [ -z "${NVM_RC_VERSION}" ]; then
     nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
     return 2
@@ -715,9 +719,9 @@ nvm_print_formatted_alias() {
     VERSION_FORMAT='%s *'
   fi
   if [ "${DEST}" = "${VERSION}" ]; then
-    command printf -- "${ALIAS_FORMAT} ${ARROW} ${VERSION_FORMAT}${NEWLINE}" "${ALIAS}" "${DEST}"
+    nvm_printf -- "${ALIAS_FORMAT} ${ARROW} ${VERSION_FORMAT}${NEWLINE}" "${ALIAS}" "${DEST}"
   else
-    command printf -- "${ALIAS_FORMAT} ${ARROW} ${DEST_FORMAT} (${ARROW} ${VERSION_FORMAT})${NEWLINE}" "${ALIAS}" "${DEST}" "${VERSION}"
+    nvm_printf -- "${ALIAS_FORMAT} ${ARROW} ${DEST_FORMAT} (${ARROW} ${VERSION_FORMAT})${NEWLINE}" "${ALIAS}" "${DEST}" "${VERSION}"
   fi
 }
 
@@ -880,7 +884,7 @@ nvm_resolve_alias() {
       break
     fi
 
-    if command printf "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$"; then
+    if nvm_printf "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$"; then
       ALIAS="∞"
       break
     fi
@@ -1092,9 +1096,9 @@ nvm_ls() {
 
   if [ "${NVM_ADD_SYSTEM-}" = true ]; then
     if [ -z "${PATTERN}" ] || [ "${PATTERN}" = 'v' ]; then
-      VERSIONS="${VERSIONS}$(command printf '\n%s' 'system')"
+      VERSIONS="${VERSIONS}$(nvm_printf '\n%s' 'system')"
     elif [ "${PATTERN}" = 'system' ]; then
-      VERSIONS="$(command printf '%s' 'system')"
+      VERSIONS="$(nvm_printf '%s' 'system')"
     fi
   fi
 
@@ -1464,9 +1468,9 @@ nvm_print_versions() {
           fi
         ;;
       esac
-      command printf -- "${FORMAT}${LTS_FORMAT}\\n" "${VERSION}" " ${LTS}"
+      nvm_printf -- "${FORMAT}${LTS_FORMAT}\\n" "${VERSION}" " ${LTS}"
     else
-      command printf -- "${FORMAT}\\n" "${VERSION}"
+      nvm_printf -- "${FORMAT}\\n" "${VERSION}"
     fi
   done
 }
@@ -3495,7 +3499,7 @@ nvm() {
         nvm_download nvm_get_latest nvm_has nvm_install_default_packages nvm_get_default_packages \
         nvm_curl_use_compression nvm_curl_version \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
-        nvm_echo nvm_err nvm_grep nvm_cd \
+        nvm_printf nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed \
